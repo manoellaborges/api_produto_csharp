@@ -1,0 +1,12 @@
+# Ignorar arquivos e pastas do Visual Studio
+.vs/
+*.vscode/
+*.user
+*.suo
+*.userosscache
+*.suo
+*.ncb
+*.sdf
+*.opensdf
+*.cache
+*.tmp

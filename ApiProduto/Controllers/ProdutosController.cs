@@ -1,7 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using ApiProduto.Models;
 using ApiProduto.Repositories;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ApiProduto.Controllers
 {
@@ -19,18 +19,20 @@ namespace ApiProduto.Controllers
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var produtos = await _produtoRepository.GetAllAsync();
+            IEnumerable<Produto> produtos = await _produtoRepository.GetAllAsync();
             return Ok(produtos);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var produto = await _produtoRepository.GetByIdAsync(id);
+            Produto? produto = await _produtoRepository.GetByIdAsync(id);
+
             if (produto == null)
             {
                 return NotFound();
             }
+
             return Ok(produto);
         }
 
@@ -44,11 +46,13 @@ namespace ApiProduto.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, [FromBody] Produto produto)
         {
-            var existing = await _produtoRepository.GetByIdAsync(id);
+            Produto? existing = await _produtoRepository.GetByIdAsync(id);
+
             if (existing == null)
             {
                 return NotFound();
             }
+
             produto.Id = id;
             await _produtoRepository.UpdateAsync(produto);
             return NoContent();
@@ -57,7 +61,8 @@ namespace ApiProduto.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var produto = await _produtoRepository.GetByIdAsync(id);
+            Produto? produto = await _produtoRepository.GetByIdAsync(id);
+
             if (produto == null)
             {
                 return NotFound();
@@ -66,6 +71,5 @@ namespace ApiProduto.Controllers
             await _produtoRepository.DeleteAsync(id);
             return NoContent();
         }
-
     }
 }

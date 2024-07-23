@@ -10,10 +10,8 @@ namespace ApiProduto.Authentication
     public class BasicAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         public BasicAuthenticationHandler(
-            IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) : base(options, logger, encoder, clock)
-        {
-
-        }
+            IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock) 
+            : base(options, logger, encoder, clock) { }
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
@@ -22,33 +20,29 @@ namespace ApiProduto.Authentication
 
             try
             {
-                var authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
-                var credentialBytes = Convert.FromBase64String(authHeader.Parameter);
-                var credentials = Encoding.UTF8.GetString(credentialBytes).Split(new[] { ':' }, 2);
-                var username = credentials[0];
-                var password = credentials[1];
+                AuthenticationHeaderValue authHeader = AuthenticationHeaderValue.Parse(Request.Headers["Authorization"]);
+                byte[] credentialBytes = Convert.FromBase64String(authHeader.Parameter);
+                string[] credentials = Encoding.UTF8.GetString(credentialBytes).Split(new[] { ':' }, 2);
+                string username = credentials[0];
+                string password = credentials[1];
 
                 if (username == "admin" && password == "password")
                 {
-                    var claims = new[]
-                    {
+                    Claim[] claims =
+                    [
                         new Claim(ClaimTypes.NameIdentifier, username),
                         new Claim(ClaimTypes.Name, username),
-                    };
+                    ];
 
-                    var identify = new ClaimsIdentity(claims, Scheme.Name);
-                    var principal = new ClaimsPrincipal(identify);
-                    var ticket = new AuthenticationTicket(principal, Scheme.Name);
+                    ClaimsIdentity identify = new(claims, Scheme.Name);
+                    ClaimsPrincipal principal = new(identify);
+                    AuthenticationTicket ticket = new(principal, Scheme.Name);
 
                     return AuthenticateResult.Success(ticket);
                 }
 
-                else
-                {
-                    return AuthenticateResult.Fail("Invalid username or password");
-                }
+                return AuthenticateResult.Fail("Invalid username or password");
             }
-
             catch
             {
                 return AuthenticateResult.Fail("Invalid Aurhotization Header");

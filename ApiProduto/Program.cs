@@ -10,7 +10,7 @@ namespace ApiProduto
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             // Adicionar serviços
             builder.Services.AddControllers();
@@ -23,8 +23,9 @@ namespace ApiProduto
             // Adicionar o serviço ProdutoRepository e ProdutoService
             builder.Services.AddScoped<IProdutoRepository>(provider =>
             {
-                var configuration = provider.GetRequiredService<IConfiguration>();
-                var connectionString = configuration.GetConnectionString("DefaultConnection");
+                IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
+                string? connectionString = configuration.GetConnectionString("DefaultConnection");
+                
                 return new ProdutoRepository(connectionString);
             });
             builder.Services.AddScoped<IProdutoService, ProdutoService>();
@@ -33,7 +34,7 @@ namespace ApiProduto
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
-            var app = builder.Build();
+            WebApplication app = builder.Build();
 
             // Configuração do pipeline de requisições
             if (app.Environment.IsDevelopment())
@@ -51,9 +52,6 @@ namespace ApiProduto
             app.MapControllers();
 
             app.Run();
-
-
         }
     }
-
 }

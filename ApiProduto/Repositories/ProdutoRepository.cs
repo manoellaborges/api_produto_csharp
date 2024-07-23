@@ -18,59 +18,48 @@ public class ProdutoRepository : IProdutoRepository
 
     public async Task<IEnumerable<Produto>> GetAllAsync()
     {
-        var produtos = new List<Produto>();
+        List<Produto> produtos = new();
 
-        using (var connection = CreateConnection())
+        var connection = CreateConnection();
+
+        await connection.OpenAsync();
+
+        NpgsqlCommand command = new("SELECT * FROM produtos", connection);
+        NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+
+        while (await reader.ReadAsync())
         {
-            await connection.OpenAsync();
-
-            using (var command = new NpgsqlCommand("SELECT * FROM produtos", connection))
-            using (var reader = await command.ExecuteReaderAsync())
+            produtos.Add(new Produto
             {
-                while (await reader.ReadAsync())
-                {
-                    produtos.Add(new Produto
-                    {
-                        Id = reader.GetInt32(0),
-                        Nome = reader.GetString(1),
-                        Tipo = (TipoProduto)reader.GetInt32(2),
-                        PrecoUnitario = reader.GetDecimal(3),  // Sem alteração necessária aqui
-                    });
-                }
-            }
+                Id = reader.GetInt32(0),
+                Nome = reader.GetString(1),
+                Tipo = (TipoProduto)reader.GetInt32(2),
+                PrecoUnitario = reader.GetDecimal(3)
+            });
         }
 
         return produtos;
     }
 
-    public async Task<Produto> GetByIdAsync(int id)
+    public async Task<Produto?> GetByIdAsync(int id)
     {
-        Produto produto = null;
+        NpgsqlConnection connection = CreateConnection();
 
-        using (var connection = CreateConnection())
-        {
-            await connection.OpenAsync();
+        await connection.OpenAsync();
 
-            using (var command = new NpgsqlCommand("SELECT * FROM produtos WHERE Id = @Id", connection))
+        NpgsqlCommand command = new("SELECT * FROM produtos WHERE Id = @Id", connection);
+
+        command.Parameters.AddWithValue("Id", id);
+        NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+
+        return await reader.ReadAsync() ?
+            new Produto
             {
-                command.Parameters.AddWithValue("Id", id);
-                using (var reader = await command.ExecuteReaderAsync())
-                {
-                    if (await reader.ReadAsync())
-                    {
-                        produto = new Produto
-                        {
-                            Id = reader.GetInt32(0),
-                            Nome = reader.GetString(1),
-                            Tipo = (TipoProduto)reader.GetInt32(2),
-                            PrecoUnitario = reader.GetDecimal(3)  // Sem alteração necessária aqui
-                        };
-                    }
-                }
-            }
-        }
-
-        return produto;
+                Id = reader.GetInt32(0),
+                Nome = reader.GetString(1),
+                Tipo = (TipoProduto)reader.GetInt32(2),
+                PrecoUnitario = reader.GetDecimal(3)
+            } : null;
     }
 
     public async Task AddAsync(Produto produto)
@@ -82,9 +71,9 @@ public class ProdutoRepository : IProdutoRepository
             {
                 command.Parameters.AddWithValue("Nome", produto.Nome);
                 command.Parameters.AddWithValue("Tipo", (int)produto.Tipo);
-                command.Parameters.AddWithValue("Preco_Unitario", produto.PrecoUnitario);  // Nome corrigido
+                command.Parameters.AddWithValue("Preco_Unitario", produto.PrecoUnitario);
 
-                var id = (int)await command.ExecuteScalarAsync();
+                int id = (int)await command.ExecuteScalarAsync();
                 produto.Id = id;
             }
         }
@@ -99,7 +88,7 @@ public class ProdutoRepository : IProdutoRepository
             {
                 command.Parameters.AddWithValue("Nome", produto.Nome);
                 command.Parameters.AddWithValue("Tipo", (int)produto.Tipo);
-                command.Parameters.AddWithValue("Preco_Unitario", produto.PrecoUnitario);  // Nome corrigido
+                command.Parameters.AddWithValue("Preco_Unitario", produto.PrecoUnitario);
                 command.Parameters.AddWithValue("Id", produto.Id);
 
                 await command.ExecuteNonQueryAsync();

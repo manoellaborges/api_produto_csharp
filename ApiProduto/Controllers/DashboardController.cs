@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using ApiProduto.Models;
 using ApiProduto.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ApiProduto.Controllers
 {
@@ -14,10 +15,12 @@ namespace ApiProduto.Controllers
         {
             _produtoService = produtoService;
         }
+
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var produtos = await _produtoService.GetAllAsync();
+            IEnumerable<Produto> produtos = await _produtoService.GetAllAsync();
+            
             var dashboardData = produtos
                 .GroupBy(p => p.Tipo)
                 .Select(g => new
@@ -26,6 +29,7 @@ namespace ApiProduto.Controllers
                     Quantidade = g.Count(),
                     PrecoUnitarioMedio = g.Average(p => p.PrecoUnitario)
                 });
+
             return Ok(dashboardData);
         }
     }
